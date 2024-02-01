@@ -20,7 +20,7 @@ save_file_list=($(find "$PALWORLD_SAVEFILE_DIR" -type f -name "*$SAV_FILENAME_EX
 for save_file in "${save_file_list[@]}"; do
         sav_file_id=$(basename $save_file $SAV_FILENAME_EXTENSION)
 
-        python3 $PALWORLD_SAVE_TOOLS_DIR/convert.py $save_file --output $PALWORLD_SAVE_TOOLS_WORKSPACE_DIR/$save_file_id.json
+        python3 $PALWORLD_SAVE_TOOLS_DIR/convert.py $save_file --output $PALWORLD_SAVE_TOOLS_WORKSPACE_DIR/$sav_file_id.json
 done
 
 json_save_file_list=($(find "$PALWORLD_SAVE_TOOLS_WORKSPACE_DIR" -type f -name "*$JSON_FILENAME_EXTENSION"))
