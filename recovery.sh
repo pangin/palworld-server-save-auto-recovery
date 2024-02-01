@@ -36,7 +36,8 @@ for json_file in "${json_save_file_list[@]}"; do
 
                 jq '.header.save_game_class_name = "/Script/Pal.PalWorldPlayerSaveGame"' $json_file > $json_file.tmp
                 mv $json_file.tmp $json_file
-                python3 $PALWORLD_SAVE_TOOLS_DIR/convert.py $json_file --output $PALWORLD_SAVEFILE_DIR/$json_file_id.sav
+                python3 $PALWORLD_SAVE_TOOLS_DIR/convert.py $json_file --output $PALWORLD_SAVE_TOOLS_DIR/$json_file_id.sav
+                mv $PALWORLD_SAVE_TOOLS_DIR/$json_file_id.sav $PALWORLD_SAVEFILE_DIR/$json_file_id.sav
         fi
 done
 
