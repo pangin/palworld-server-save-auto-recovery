@@ -15,7 +15,7 @@ Script for palworld server save auto recovery
 
 1. Clone this project or just download recovery.sh file to anywhere you want
 
-2. Give execute permission to recovery.sh file
+2. Grant execute permission to recovery.sh file
 
 3. <a href="https://jqlang.github.io/jq/download/">install jq</a>
 
