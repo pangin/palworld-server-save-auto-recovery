@@ -11,7 +11,6 @@ PALWORLD_SAVEFILE_DIR=""
 PALWORLD_SAVE_TOOLS_DIR=""
 PALWORLD_SAVE_TOOLS_WORKSPACE_DIR=""
 
-
 # SCRIPT START
 mkdir -p $PALWORLD_SAVE_TOOLS_WORKSPACE_DIR
 
@@ -20,7 +19,7 @@ save_file_list=($(find "$PALWORLD_SAVEFILE_DIR" -type f -name "*$SAV_FILENAME_EX
 for save_file in "${save_file_list[@]}"; do
         sav_file_id=$(basename $save_file $SAV_FILENAME_EXTENSION)
 
-        python3 $PALWORLD_SAVE_TOOLS_DIR/convert.py $save_file --output $PALWORLD_SAVE_TOOLS_WORKSPACE_DIR/$sav_file_id.json
+        python3 $PALWORLD_SAVE_TOOLS_DIR/palworld_save_tools/commands/convert.py $save_file --output $PALWORLD_SAVE_TOOLS_WORKSPACE_DIR/$sav_file_id.json
 done
 
 json_save_file_list=($(find "$PALWORLD_SAVE_TOOLS_WORKSPACE_DIR" -type f -name "*$JSON_FILENAME_EXTENSION"))
@@ -34,7 +33,7 @@ for json_file in "${json_save_file_list[@]}"; do
         if [ $save_game_class_name == $SAVE_CORRUPT_DETECT_VALUE ]; then
                 json_file_id=$(basename $json_file $JSON_FILENAME_EXTENSION)
 
-                jq '.header.save_game_class_name = "/Script/Pal.PalWorldPlayerSaveGame"' $json_file > $json_file.tmp
+                jq '.header.save_game_class_name = "/Script/Pal.PalWorldPlayerSaveGame"' $json_file >$json_file.tmp
                 mv $json_file.tmp $json_file
                 python3 $PALWORLD_SAVE_TOOLS_DIR/convert.py $json_file --output $PALWORLD_SAVE_TOOLS_DIR/$json_file_id.sav
                 mv $PALWORLD_SAVE_TOOLS_DIR/$json_file_id.sav $PALWORLD_SAVEFILE_DIR/$json_file_id.sav
