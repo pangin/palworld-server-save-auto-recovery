@@ -1,0 +1,52 @@
+name: Review cycle controller checks
+on:
+  pull_request:
+  push:
+    branches: ["main"]
+permissions:
+  contents: read
+jobs:
+  controller-tests:
+    runs-on: ubuntu-latest
+    outputs:
+      application_ready: ${{ steps.readiness.outputs.application_ready }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - run: python3 -m unittest discover -s .github/review-cycle -v
+      - name: Report enrollment separately from application readiness
+        id: readiness
+        run: |
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          config = json.loads(Path('.github/review-cycle/config.json').read_text())
+          ready = config.get('readiness', 'ready') == 'ready'
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('application_ready=' + str(ready).lower() + '\n')
+          print('Application test profile: ' + ('ready' if ready else 'PENDING; application test is skipped, not passed'))
+          PY
+  application-container-smoke:
+    needs: controller-tests
+    if: needs.controller-tests.outputs.application_ready == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Run actual verified repository tests in a credential-free container
+        env:
+          PYTHONPATH: .github/review-cycle
+        run: |
+          python3 - <<'PY'
+          import json, os, tempfile
+          from pathlib import Path
+          import cloud_controller as controller
+          import cloud_state as state
+          config = state.validate_config(json.loads(Path('.github/review-cycle/config.json').read_text()))
+          with tempfile.TemporaryDirectory() as scratch:
+              controller.test_container(Path(os.environ['GITHUB_WORKSPACE']), config, Path(scratch))
+          PY

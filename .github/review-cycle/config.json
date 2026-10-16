@@ -1,0 +1,43 @@
+{
+  "owner": "pangin",
+  "enabled": true,
+  "activated_at": "2026-10-14T14:03:28Z",
+  "max_rounds": null,
+  "model": "opus[1m]",
+  "readiness": "pending",
+  "readiness_reason": "Repository-specific acceptance criteria, application test suite and digest-pinned credential-free offline image have not yet been executed and verified.",
+  "review_documents": [
+    "AGENTS.md",
+    ".github/review-cycle/CONTRACT.md",
+    "README.md"
+  ],
+  "review_criteria": [
+    {
+      "id": "TASK-BOUNDARY",
+      "source": ".github/review-cycle/CONTRACT.md",
+      "section": "Scope and sources",
+      "requirement": "Preserve the authorized task, applicable repository/ADR instructions and fixed approved baseline; report omitted mandatory criteria or ambiguity as needs_review."
+    },
+    {
+      "id": "TEST-INTEGRITY",
+      "source": ".github/review-cycle/CONTRACT.md",
+      "section": "Evidence and tests",
+      "requirement": "Preserve required application test/CI checks and safety boundaries; distinguish executed offline evidence from live behavior and unverified claims."
+    },
+    {
+      "id": "REVIEW-INTEGRITY",
+      "source": ".github/review-cycle/CONTRACT.md",
+      "section": "Independent review and iteration",
+      "requirement": "Independently assess findings and rebuttals on the same candidate; do not auto-merge, force-push, weaken criteria, count silence as consensus or retry failed/crashed attempts implicitly."
+    },
+    {
+      "id": "HUMAN-DIRECTION",
+      "source": ".github/review-cycle/CONTRACT.md",
+      "section": "Independent review and iteration",
+      "requirement": "When approved criteria or evidence cannot determine a safe choice, visibly notify the owner and stop until recorded authorized direction and fresh review."
+    }
+  ],
+  "required_ci": [],
+  "test_image": null,
+  "test_commands": []
+}
