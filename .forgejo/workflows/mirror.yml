@@ -1,0 +1,63 @@
+# 외부 저장소 양방향 동기화. Forgejo(홈서버)가 메인이고, 어느 저장소에 기여하든 모든 저장소에 반영한다.
+#   pull  외부 대상마다 새로 생긴 커밋을 Forgejo로 가져온다 (job 하나)
+#   push  Forgejo의 브랜치·태그를 외부 대상마다 맞춘다 (대상마다 job 하나)
+# 갈라진 브랜치는 덮어쓰지 않고 외부 쪽을 <브랜치>-from-<대상>으로 Forgejo에 보존한 뒤 job을 실패로 남긴다.
+# 실제 동작은 runner에 있는 mirror-sync.sh에 있다 (git-vault의 homeserver/runner-bin). 규칙은 그 파일 머리말에 있다.
+#   대상 목록  저장소 변수 MIRROR_TARGETS 예) ["GITHUB"]
+#   대상 주소  사용자 변수 MIRROR_URL_<대상>·MIRROR_USER_<대상>, 사용자 비밀 MIRROR_TOKEN_<대상>
+# 외부에서 바뀐 것은 git-vault의 mirror-hub가 10분마다 보고 이 워크플로를 깨운다. 매일 한 번은 스스로도 돈다.
+# git-vault(scripts/Set-MirrorCI.ps1)가 관리하는 파일이다. 여기서 고치면 다음 배포 때 덮어쓴다.
+name: mirror
+
+on:
+  push:
+  delete:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 19 * * *'   # 매일 04:17 (KST)
+
+env:
+  REPO: ${{ github.repository }}
+  SOURCE_BASE: ${{ vars.MIRROR_SOURCE_BASE }}
+  SOURCE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  FORGEJO_PUSH_TOKEN: ${{ secrets.MIRROR_FORGEJO_TOKEN }}
+  MIRROR_TARGETS: ${{ vars.MIRROR_TARGETS }}
+  URL_GITHUB: ${{ vars.MIRROR_URL_GITHUB }}
+  USER_GITHUB: ${{ vars.MIRROR_USER_GITHUB }}
+  TOKEN_GITHUB: ${{ secrets.MIRROR_TOKEN_GITHUB }}
+  URL_GITLAB: ${{ vars.MIRROR_URL_GITLAB }}
+  USER_GITLAB: ${{ vars.MIRROR_USER_GITLAB }}
+  TOKEN_GITLAB: ${{ secrets.MIRROR_TOKEN_GITLAB }}
+  URL_CODEBERG: ${{ vars.MIRROR_URL_CODEBERG }}
+  USER_CODEBERG: ${{ vars.MIRROR_USER_CODEBERG }}
+  TOKEN_CODEBERG: ${{ secrets.MIRROR_TOKEN_CODEBERG }}
+  URL_AZURE: ${{ vars.MIRROR_URL_AZURE }}
+  USER_AZURE: ${{ vars.MIRROR_USER_AZURE }}
+  TOKEN_AZURE: ${{ secrets.MIRROR_TOKEN_AZURE }}
+  URL_BITBUCKET: ${{ vars.MIRROR_URL_BITBUCKET }}
+  USER_BITBUCKET: ${{ vars.MIRROR_USER_BITBUCKET }}
+  TOKEN_BITBUCKET: ${{ secrets.MIRROR_TOKEN_BITBUCKET }}
+
+jobs:
+  pull:
+    if: ${{ vars.MIRROR_TARGETS != '' && vars.MIRROR_TARGETS != '[]' }}
+    runs-on: host
+    timeout-minutes: 120
+    steps:
+      - name: 외부 → Forgejo
+        shell: sh
+        run: sh "$HOME/bin/mirror-sync.sh" pull
+
+  push:
+    needs: pull
+    if: ${{ always() && vars.MIRROR_TARGETS != '' && vars.MIRROR_TARGETS != '[]' }}
+    runs-on: host
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJSON(vars.MIRROR_TARGETS) }}
+    steps:
+      - name: Forgejo → ${{ matrix.target }}
+        shell: sh
+        run: sh "$HOME/bin/mirror-sync.sh" push "${{ matrix.target }}"
